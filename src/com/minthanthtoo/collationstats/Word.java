@@ -29,6 +29,11 @@ public class Word
 	@Override
 	public String toString()
 	{
+		return Syllable.toString(this.syllables);
+	}
+
+	public String getMessage()
+	{
 		return Syllable.toString(this.syllables) + "\t:" + occurrence;
 	}
 }

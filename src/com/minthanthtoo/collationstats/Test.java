@@ -3,27 +3,44 @@ package com.minthanthtoo.collationstats;
 //import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.lang.reflect.Field;
-import java.nio.charset.Charset;
 import java.util.*;
 
 public class Test
 {
-	public static void main(String[] args){
-		fixIOEncodingToUtf8();
-		Test t=new Test();
-		t.testPrintOutStats();
-	}
 	String[] words =
 	{ "hello", "bye", "\u1000\u1001\u1030\u1031", "\u1001\u1000\u1000\u1000",
 		"\u1000\u1000", "\u1000\u1000\u1000", "\u1000\u1000\u1000" };
 
+	public static void main(String[] args)
+	{
+		long t0=System.currentTimeMillis();
+		try
+		{
+			Utils.fixIOEncodingToUtf8();
+			Test t=new Test();
+			t.testLetterTypesTable();
+			t.testSyllableSegmentation();
+			t.testPrintOutStats();
+		}
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		long t1=System.currentTimeMillis();
+		System.out.println("--- Total time elapsed : '" + (t1 - t0) + "' ms");
+	}
+
+//	@org.junit.Test
+	public void testSyllableSegmentation()
+	{
+		for (File f:Utils.getDataFiles())
+		{
+			Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".segmented.txt", Utils.flagsDefault);
+		}
+	}
 //	@org.junit.Test
 	public void testCollationStats()
 	{
@@ -57,7 +74,8 @@ public class Test
 			String line;
 			while ((line = r.readLine()) != null)
 				words.add(line);
-		} catch (Exception e)
+		}
+		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
@@ -87,138 +105,80 @@ public class Test
 		sb.append("\nLetter Type Table:\n");
 		for (int i = 0; i < Letter.letterTypes.length; i++)
 		{
-			sb.append(Integer.toHexString(0x1000 + i) + "\t"
-					  + (char) Letter.letterTypes[i] + "\n");
+			sb.append(Integer.toHexString(0x1000 + i) + "\t-" + (char)(0x1000 + i) + "\t"
+					  + ((char) Letter.letterTypes[i]) + "\n");
 		}
 
 		System.out.println(sb.toString());
 	}
 
-
-	static final String newLineChar="\n";
 //	@org.junit.Test
 	public void testPrintOutStats()
 	{
-		File path = new File(Constants.LEXICON_FILE_SEARCH_PATH);
-		if(path.isDirectory()){
-			String[] fileNames = path.list();
-			for(String fn:fileNames){
-				if(!fn.endsWith(".list"))
-					continue;
-				File f=new File(path,fn);
-				printOutStats(f);
-			}
-		}else if(path.isFile()){
-			printOutStats(path);
-		}else{
-			System.err.println("file \""+path+"\" is not found!");
+		for (File f:Utils.getDataFiles())
+		{
+			Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".analyzed.txt", Utils.flagsDefault|Utils.LEX_TO_FILE_FLAG_WRITE_STATS);
+//			printOutStats(Utils.toLexicon(f), f);
 		}
 	}
-	public void printOutStats(File srcFile)
-	{		
-		BufferedReader r;
-		List<String> words = new LinkedList<>();
-		try
-		{
-			r = new BufferedReader(new InputStreamReader(new FileInputStream(
-															 srcFile),"UTF-8"));
-
-			String line;
-			while ((line = r.readLine()) != null){
-				// exclude comment lines starting with "#" character
-				if(line.startsWith("#"))
-					continue;
-				words.add(line);
-				System.out.println(line);
-			}
-		} catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-		Lexicon src = new Lexicon(words.toArray(new String[0]));
-		
+	public void printOutStats(Lexicon src, File srcFile)
+	{
 		long t1 = System.currentTimeMillis();
 		src.analyze();
 		long t2 = System.currentTimeMillis();
-		
+
 		String time= ("\nAnalysis time: " + (t2 - t1) + "ms");
 
 		StringBuilder sb = new StringBuilder();
 
 		sb.append(src.stats);
 		sb.append(time);
-		writeToFile(srcFile.getAbsolutePath()+".analyzed.txt",sb.toString());
+		Utils.writeToFile(srcFile.getAbsolutePath() + ".analyzed.txt", sb.toString());
 
 		sb = new StringBuilder();
-		
-		if(true)return;
+
+		if (true)return;
 		//sb.append("\nWords:\n");
 		for (Word w : src.stats.words.values())
-			sb.append(Syllable.toString(w.syllables) + newLineChar);
+			sb.append(Syllable.toString(w.syllables) + Utils.newLineChar);
 		//sb.append("count:\t" +src.stats.words.values().size() + "\n");
 		//sb.append(time);
-		writeToFile(srcFile.getAbsolutePath()+".Words.txt",sb.toString());
+		Utils.writeToFile(srcFile.getAbsolutePath() + ".Words.txt", sb.toString());
 
 		sb = new StringBuilder();
 		Collections.sort(src.stats.syllables, new LexComparator.SyllableComparator());
 		//sb.append("\nSyllables:\n");
 		for (Syllable s : src.stats.syllables)
-			sb.append(Syllable.toString(s) + newLineChar);
+			sb.append(s.getMessage() + Utils.newLineChar);
 		//sb.append("count:\t" + src.stats.syllables.size() + "\n");
 		//sb.append(time);
-		writeToFile(srcFile.getAbsolutePath()+".Syllables.txt",sb.toString());
+		Utils.writeToFile(srcFile.getAbsolutePath() + ".Syllables.txt", sb.toString());
 
 		sb = new StringBuilder();
 		Collections.sort(src.stats.letters, new LexComparator.LetterComparator());
 		//sb.append("\nLetters:\n");
 		for (Letter l : src.stats.letters)
-			sb.append(l.codePoint + newLineChar);
+			sb.append(l.codePoint + Utils.newLineChar);
 		//sb.append("count:\t" + src.stats.letters.size() + "\n");
 		//sb.append(time);
-		writeToFile(srcFile.getAbsolutePath()+".Letters.txt",sb.toString());
+		Utils.writeToFile(srcFile.getAbsolutePath() + ".Letters.txt", sb.toString());
 
 		sb = new StringBuilder();
-		Collections.sort(src.stats.syllableHeads, new LexComparator.SyllableComparator());
+		Collections.sort(src.stats.syllableHeads, new LexComparator.SyllableAbstrComparator());
 		//sb.append("\nSyllables Heads:\n");
 		for (SyllableHead s : src.stats.syllableHeads)
-			sb.append(Syllable.toString(s) + newLineChar);
+			sb.append(s.getMessage() + Utils.newLineChar);
 		//sb.append("count:\t" + src.stats.syllableHeads.size() + "\n");
 		//sb.append(time);
-		writeToFile(srcFile.getAbsolutePath()+".SyllablesHeads.txt",sb.toString());
+		Utils.writeToFile(srcFile.getAbsolutePath() + ".SyllablesHeads.txt", sb.toString());
 
 		sb = new StringBuilder();
-		Collections.sort(src.stats.syllableTails, new LexComparator.SyllableComparator());
+		Collections.sort(src.stats.syllableTails, new LexComparator.SyllableAbstrComparator());
 		//sb.append("\nSyllables Tails:\n");
 		for (SyllableTail s : src.stats.syllableTails)
-			sb.append(Syllable.toString(s) + newLineChar);
+			sb.append(s.toString() + Utils.newLineChar);
 		//sb.append("count:\t" + src.stats.syllableTails.size() + "\n");
 		//sb.append(time);
-		writeToFile(srcFile.getAbsolutePath()+".SyllablesTails.txt",sb.toString());
-	}
-	
-	private void writeToFile(String filepath,String s){
-		try
-		{
-			BufferedWriter w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
-																			 filepath)));
-
-			w.write(s);
-			w.close();
-		} catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-	}
-
-	public static void fixIOEncodingToUtf8(){
-		System.out.println(System.getProperty("file.encoding"));
-		try {
-			Field f = Charset.class.getField("defaultCharset");
-			f.setAccessible(true);
-			f.set(null, null);
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		Utils.writeToFile(srcFile.getAbsolutePath() + ".SyllablesTails.txt", sb.toString());
 	}
 }

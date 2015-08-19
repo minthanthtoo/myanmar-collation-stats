@@ -1,9 +1,12 @@
 package com.minthanthtoo.collationstats;
 
-
+/**
+ * "Syllable head" means the main consonant('C'),
+ * independent vowel('V'), or symbol('S') of a syllable.
+ * 
+ */
 public class SyllableHead extends SyllableAbstr
 {
-
 	private SyllableHead(Letter head)
 	{
 		super.letters = new Letter[]{head};

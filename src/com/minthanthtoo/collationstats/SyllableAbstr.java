@@ -8,16 +8,16 @@ public abstract class SyllableAbstr
 	@Override
 	public String toString()
 	{
-		return Letter.toString(this.letters) + "\t:" + occurrence;
-	}
-	
-	public static String toString(SyllableAbstr s)
-	{
 		StringBuilder sb = new StringBuilder();
-		for (Letter l : s.letters)
+		for (Letter l : this.letters)
 		{
 			sb.append(l.codePoint);
 		}
 		return sb.toString();
+	}
+	
+	public String getMessage()
+	{
+		return Letter.toString(this.letters) + "\t:" + occurrence;
 	}
 }

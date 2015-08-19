@@ -2,6 +2,11 @@ package com.minthanthtoo.collationstats;
 
 import java.util.Arrays;
 
+/**
+ * "Syllable tail" is the remaining part of a syllable excluding
+ * "syllable head".
+ *
+ */
 public class SyllableTail extends SyllableAbstr
 {
 	private SyllableTail(Letter[] syllable)

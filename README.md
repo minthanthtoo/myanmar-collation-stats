@@ -15,15 +15,42 @@ It will show -
 
 <b>Note:</b>
 
-Syllable = a combination of myanmar letters; one or more syllables join to form a myanmar word.
+_Syllable_ = a combination of myanmar letters; one or more syllables join to form a myanmar word.
 
-Syllable-head = the first consonant in a syllable.
+_Syllable-head_ = the first consonant in a syllable.
 
-Syllable-tail = the remaining part in a syllable except syllable-head
+_Syllable-tail_ = the remaining part in a syllable except syllable-head
 
-Currently this module  only can read simple wordlists.<br/>
-The wordlist must express a single word in a single line.<br/>
-You can write comments starting each line with a '#' character.
+Currently this module  only can read simple word lists.<br/>
+The word list must express a single word in a single line.<br/>
+You can write comments starting each line with a _#_ character.
+
+How it works
+=========
+* Analysis
+Words, syllables, letters, syllable-heads, syllable-tails, types of letter-order used in the source text  can be counted by using the following code:
+
+	File srcFile = new File("/path/to/file");
+	Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".analyzed.txt", Utils.flags_default|Utils.LEX_TO_FILE_FLAG_WRITE_STATS);
+	
+* Segmentation
+Segmentation of Myanmar text into syllables can be done by the following code.
+
+	File srcFile = new File("/path/to/file");
+	Utils.toFile(Utils.toLexicon(srcFile), srcFile.getAbsolutePath() + ".segmented.txt", Utils.flagsDefault|Utils.LEX_TO_FILE_FLAG_SEGMENTATION);
+	
+* Myanmar Sorting
+Sorting of Myanmar words according to dictionary rules can be done by the following code:
+
+	File srcFile = new File("/path/to/file");
+	Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".analyzed.txt", Utils.flags_default|Utils.LEX_TO_FILE_FLAG_SORT);
+	
+Or with the following customized code:
+
+	Lexicon lex=Utils.toLexicon(srcFile);
+	lex.analyze();
+	List<Word> words=new ArrayList<Word>(lex.stats.words.values());
+	Collections.sort(words, new LexComparator.WordComparator());
 
 Therory
 ======
@@ -38,12 +65,12 @@ Myanmar letters can be classified into -
 4) Finals (F)
 
 Further reading can be found here:<br/>
-"Representing myanmar in Unicode - Unicode Consortium" [http://unicode.org/notes/tn11]
+("Representing myanmar in Unicode - Unicode Consortium")[http://unicode.org/notes/tn11]
 
 Input
 ====
-It read all ".list" files under "[project dir]/data/wordlists/".<br/>
-Currently the input files must be wordlists commented out by '#' character
+It read all _.list_ files under `[project dir]/data/wordlists/`.<br/>
+Currently the input files must be wordlists commented out by _#_ character
 
 Output
 =====
@@ -114,11 +141,11 @@ Purposes
 ======
 This module can be used in <b>NLP (Natural Language Processing)</b> research in the following ways -
 
-1) Myanmar Word segmentation (this module can count the number of syllables)
+* Myanmar Word segmentation (this module can count the number of syllables)
 
-2) Myanmar Sorting (part of the module apply "Myanmar Sorting Rules"; still under development)
+* Myanmar Sorting (part of the module apply "Myanmar Sorting Rules"; still under development)
 
-3) Analysis of Myanmar letter frequency in a lexicon (still working to support a real lexicon not just a wordlist)
+* Analysis of Myanmar letter frequency in a lexicon (still working to support a real lexicon not just a wordlist)
 
 Contact
 =======
