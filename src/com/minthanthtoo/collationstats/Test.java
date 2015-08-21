@@ -6,7 +6,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Test
 {
@@ -22,8 +24,9 @@ public class Test
 			Utils.fixIOEncodingToUtf8();
 			Test t=new Test();
 			t.testLetterTypesTable();
-			t.testSyllableSegmentation();
 			t.testPrintOutStats();
+			t.testSyllableSegmentation();
+			t.testMyanmarSorting();
 		}
 		catch (Exception ex)
 		{
@@ -34,13 +37,50 @@ public class Test
 	}
 
 //	@org.junit.Test
+	public void testLetterTypesTable()
+	{
+		if (Letter.letterTypes.length != 0x1100 - 0x1000)
+			;//			fail("Letter Type Table size is wrong");
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("\nLetter Type Table:\n");
+		for (int i = 0; i < Letter.letterTypes.length; i++)
+		{
+			sb.append(Integer.toHexString(0x1000 + i) + "\t-" + (char)(0x1000 + i) + "\t"
+					  + ((char) Letter.letterTypes[i]) + "\n");
+		}
+
+		System.out.println(sb.toString());
+	}
+
+//	@org.junit.Test
+	public void testPrintOutStats()
+	{
+		for (File f:Utils.getDataFiles())
+		{
+			Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".analyzed.txt", Utils.LEX_TO_FILE_FLAG_WRITE_STATS);
+//			printOutStats(Utils.toLexicon(f), f);
+		}
+	}
+
+//	@org.junit.Test
 	public void testSyllableSegmentation()
 	{
 		for (File f:Utils.getDataFiles())
 		{
-			Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".segmented.txt", Utils.flagsDefault);
+			Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".segmented.txt", Utils.LEX_TO_FILE_FLAG_SEGMENTATION);
 		}
 	}
+
+//	@org.junit.Test
+	public void testMyanmarSorting()
+	{
+		for (File f:Utils.getDataFiles())
+		{
+			Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".sorted.txt", Utils.LEX_TO_FILE_FLAG_SORT);
+		}
+	}
+
 //	@org.junit.Test
 	public void testCollationStats()
 	{
@@ -95,32 +135,6 @@ public class Test
 				;//				fail("Words map is mismatched");
 	}
 
-//	@org.junit.Test
-	public void testLetterTypesTable()
-	{
-		if (Letter.letterTypes.length != 0x1100 - 0x1000)
-			;//			fail("Letter Type Table size is wrong");
-
-		StringBuilder sb = new StringBuilder();
-		sb.append("\nLetter Type Table:\n");
-		for (int i = 0; i < Letter.letterTypes.length; i++)
-		{
-			sb.append(Integer.toHexString(0x1000 + i) + "\t-" + (char)(0x1000 + i) + "\t"
-					  + ((char) Letter.letterTypes[i]) + "\n");
-		}
-
-		System.out.println(sb.toString());
-	}
-
-//	@org.junit.Test
-	public void testPrintOutStats()
-	{
-		for (File f:Utils.getDataFiles())
-		{
-			Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".analyzed.txt", Utils.flagsDefault|Utils.LEX_TO_FILE_FLAG_WRITE_STATS);
-//			printOutStats(Utils.toLexicon(f), f);
-		}
-	}
 	public void printOutStats(Lexicon src, File srcFile)
 	{
 		long t1 = System.currentTimeMillis();

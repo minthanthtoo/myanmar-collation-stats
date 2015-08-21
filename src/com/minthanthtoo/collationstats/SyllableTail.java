@@ -17,6 +17,7 @@ public class SyllableTail extends SyllableAbstr
 
 	public static SyllableTail getInstance(CollationStats stats, Letter[] l)
 	{
+		stats.syllableTailCount++;
 		for (SyllableTail s : stats.syllableTails)
 			if (Arrays.equals(l, s.letters))// found
 			{

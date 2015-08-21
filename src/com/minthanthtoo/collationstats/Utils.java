@@ -1,14 +1,23 @@
 package com.minthanthtoo.collationstats;
 
-import java.io.*;
-import java.lang.reflect.*;
-import java.nio.charset.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Field;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Utils
 {
-	static final String newLineChar="\r\n";
-	static final char segmentChar='|';
+	public static final String newLineChar="\r\n";
+	public static final char segmentChar='|';
 
 	public static File[] getDataFiles()
 	{
@@ -30,61 +39,91 @@ public class Utils
 		}
 		else
 		{
-			System.err.println("file \"" + path + "\" is not found!");
+			System.err.println("Error: file or folder '" + path + "' does not exist!");
 		}
 		return list.toArray(new File[0]);
 	}
 
-	public static final int LEX_TO_FILE_FLAG_WRITE_STATS= 1<<0;
-	public static final int LEX_TO_FILE_FLAG_SEGMENTATION = 1<<8;
-	public static final int LEX_TO_FILE_FLAG_SORT = 1<<9;
-	public static final int LEX_TO_FILE_FLAG_LINE_FEED = 1 << 10;
-	public static final int flagsDefault = LEX_TO_FILE_FLAG_SEGMENTATION | LEX_TO_FILE_FLAG_LINE_FEED;
-	public static File toFile(Lexicon src, String filenameTo, int flags)
+	public static final int LEX_TO_FILE_FLAG_WRITE_STATS = 1 << 0;
+	public static final int LEX_TO_FILE_FLAG_SEGMENTATION = 1 << 1;
+	public static final int LEX_TO_FILE_FLAG_SORT = 1 << 2;
+	public static final int LEX_TO_FILE_FLAG_CUSTOM_LINE_FEED = 1 << 8;
+	public static final int LEX_TO_FILE_FLAG_REMOVE_DUPLICATE_WORDS = 1 << 9;// only works with sort flag
+	public static File toFile(Lexicon src, String filenameTo, int flags, String...extra)
 	{		
 		long t1 = System.currentTimeMillis();
 		File toF=new File(filenameTo);
-		String lineF="";
-		if ((flags & LEX_TO_FILE_FLAG_LINE_FEED) > 0)
-			lineF = newLineChar;
+		String lineF=newLineChar;
+		if ((flags & LEX_TO_FILE_FLAG_CUSTOM_LINE_FEED) > 0 && extra.length > 0)
+			lineF = extra[0];
+		boolean removeDup=false;
+		if ((flags & LEX_TO_FILE_FLAG_REMOVE_DUPLICATE_WORDS) > 0)
+			removeDup = true;
 
 		if (src.stats == null)
 			src.analyze();
-		
+
 		List<Word> words = new ArrayList<Word>(src.stats.words.values());
-		if((flags & LEX_TO_FILE_FLAG_SORT)>0){
-			System.out.print("--- Sorting started ---");
+		if ((flags & LEX_TO_FILE_FLAG_SORT) > 0)
+		{
+			System.out.println("--- Sorting started ---");
 			Collections.sort(words, new LexComparator.WordComparator());
-			System.out.print("--- Sorting done ---");
+			System.out.println("--- Sorting done ---");
 		}
 
 		StringBuilder sb = new StringBuilder();
 		if ((flags & LEX_TO_FILE_FLAG_WRITE_STATS) > 0)
 		{
-			sb.append(src.stats);
+			sb.append(src.stats + newLineChar);
 			long t2 = System.currentTimeMillis();
-			String time= ("\nAnalysis time: " + (t2 - t1) + "ms");
+			String time = (newLineChar + "Analysis time: '" + (t2 - t1) + "' ms");
 			sb.append(time);
 		}
 		else if ((flags & LEX_TO_FILE_FLAG_SEGMENTATION) > 0)
 		{
+			Word temp=null;
 			for (Word w:words)
 			{
+				if (removeDup && w == temp)
+					continue;
 				for (Syllable s:w.syllables)
 				{
-					sb.append(s.toString() + segmentChar);
+					sb.append(Letter.toString(s.letters) + segmentChar);
 				}
 				sb.append(lineF);
+				temp = w;
 			}
+			sb.setLength(sb.length() - lineF.length());
+		}
+		else if ((flags & LEX_TO_FILE_FLAG_SORT) > 0)
+		{
+			Word temp=null;
+			for (Word w:words)
+			{
+				if (removeDup && w == temp)
+					continue;
+				for (Syllable s:w.syllables)
+				{
+					sb.append(s.toString());
+				}
+				sb.append(lineF);
+				temp = w;
+			}
+			sb.setLength(sb.length() - lineF.length());
 		}
 		else
 		{
+			String temp=null;
+			// print out the words
 			for (String s:src.words)
 			{
+				if (removeDup && s == temp)
+					continue;
 				sb.append(s + lineF);
+				temp = s;
 			}
 		}
-		
+
 		writeToFile(filenameTo, sb.toString());
 
 		return toF;
@@ -100,7 +139,7 @@ public class Utils
 															 srcFile), "UTF-8"));
 
 			String line;
-			System.out.println("--- Reading file : \'" + srcFile.getName() + "\' ---");
+			System.out.println("--- Reading file : '" + srcFile.getName() + "' ---");
 			while ((line = r.readLine()) != null)
 			{
 				// exclude comment lines starting with "#" character

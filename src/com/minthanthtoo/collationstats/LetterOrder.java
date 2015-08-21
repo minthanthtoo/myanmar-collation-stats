@@ -11,28 +11,52 @@ public class LetterOrder
 	final short[] order;
 	String sample;
 	String sampleHex;
-	private int occurrnce=0;
+	private int occurrence=0;
 	protected LetterOrder(Letter[] src)
 	{
+		int temp=0,length=src.length;
 		this.order = new short[src.length];
-		for (int i=0;i < src.length;i++)
-			this.order[i] = (short) src[i].letterType;
+
+		for (int i=0;i < length;i++)
+		{
+			if (src[i] instanceof TempLetter)
+			{
+				if (temp != ((TempLetter)src[i]).original.hashCode())
+				{
+					this.order[i] = (short) ((TempLetter)src[i]).original.letterType;
+					temp = ((TempLetter)src[i]).original.hashCode();
+				}
+				else
+				{
+					length--;
+				}
+			}
+			else
+				this.order[i] = (short) src[i].letterType;
+		}
+		if (src.length > length)
+		{
+			short[] newArray=new short[length];
+			System.arraycopy(this.order, 0, newArray, 0, length);
+		}
+
 		this.sample = Letter.toString(src);
 		StringBuilder sb=new StringBuilder();
 
 		for (Letter l:src)
 			sb.append(Integer.toHexString(l.codePoint) + "_");
 		sampleHex = sb.toString();
-		this.occurrnce = 1;
+		this.occurrence = 1;
 	}
 
 	public static final LetterOrder getInstance(CollationStats stats, final Letter[] src)
 	{
+		stats.letterOrderCount++;
 		for (LetterOrder o:stats.letterOrders)
 		{
 			if (o.equalsOrder(src))
 			{
-				o.occurrnce++;
+				o.occurrence++;
 				return o;
 			}
 		}
@@ -51,6 +75,7 @@ public class LetterOrder
 		return true;
 	}
 
+	@Override
 	public String toString()
 	{
 		StringBuilder sb = new StringBuilder();
@@ -68,7 +93,7 @@ public class LetterOrder
 		{
 			sb.append((char)s + "");
 		}
-		sb.append(",\t" + this.occurrnce + ",\t" + this.sample + "\t" + this.sampleHex);
+		sb.append(",\t" + this.occurrence + ",\t" + this.sample + "\t" + this.sampleHex);
 		return sb.toString();
 	}
 }

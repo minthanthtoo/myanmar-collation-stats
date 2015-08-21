@@ -1,45 +1,41 @@
 Myanmar Collation Stats
-==================
+=======================
 
 <b>Myanmar lexicon analyzer</b>
 
-It will do -
-* Analysis of Myanmar words in UTF-8 encoded plain-text
+<h5>Functions:</h5>
+* Statistical analysis of Myanmar words in UTF-8 encoded plain-text
 * Segmentation of Myanmar syllables phonologically
 * Sorting of Myanmar words
 
-Currently this module  only can read simple word lists.<br/>
-The word list must express a single word in a single line.<br/>
-You can write comments starting each line with a _#_ character.
-
-How it works
+Sample Codes
 ============
 <h4>Analysis</h4>
 
-Words, syllables, letters, syllable-heads, syllable-tails, types of letter-order, used in the source text can be counted by using the following code:
+Words, syllables, letters, syllable-heads, syllable-tails, types of letter-order,used in the source text, can be counted by the following code:
 
 	File srcFile = new File("/path/to/file");
-	Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".analyzed.txt", Utils.flags_default|Utils.LEX_TO_FILE_FLAG_WRITE_STATS);
+	Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".analyzed.txt", Utils.LEX_TO_FILE_FLAG_WRITE_STATS);
 	
 <h4>Segmentation</h4>
 
 Segmentation of Myanmar text into syllables can be done by the following code.
 
 	File srcFile = new File("/path/to/file");
-	Utils.toFile(Utils.toLexicon(srcFile), srcFile.getAbsolutePath() + ".segmented.txt", Utils.flagsDefault|Utils.LEX_TO_FILE_FLAG_SEGMENTATION);
+	Utils.toFile(Utils.toLexicon(srcFile), srcFile.getAbsolutePath() + ".segmented.txt", Utils.LEX_TO_FILE_FLAG_SEGMENTATION);
 	
 <h4>Myanmar Sorting</h4>
 
 Sorting of Myanmar words according to dictionary rules can be done by the following code:
 
 	File srcFile = new File("/path/to/file");
-	Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".analyzed.txt", Utils.flags_default|Utils.LEX_TO_FILE_FLAG_SORT);
+	Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".sorted.txt", Utils.LEX_TO_FILE_FLAG_SORT);
 	
-Or with the following customized code:
+Or by the following customizable code:
 
-	Lexicon lex=Utils.toLexicon(srcFile);
+	Lexicon lex = Utils.toLexicon(srcFile);
 	lex.analyze();
-	List<Word> words=new ArrayList<Word>(lex.stats.words.values());
+	List<Word> words = new ArrayList<Word>(lex.stats.words.values());
 	Collections.sort(words, new LexComparator.WordComparator());
 
 Theory
@@ -50,19 +46,22 @@ Myanmar letters can be classified into -
 * Dependent vowels (v) and independent vowels(V)
 * Medials (M)
 * Finals (F)
+* Symbols (each has special sort order)
 
 Further reading can be found here:<br/>
 ["Representing myanmar in Unicode - Unicode Consortium"](http://unicode.org/notes/tn11)
 
 Input
 =====
-It read all _.list_ files under `[project dir]/data/wordlists/`.<br/>
-Currently the input files must be only wordlists commented out by _#_ character
+Currently this module can read only simple word lists.<br/>
+The word list must express each word in a single line.<br/>
+You can write comments,starting each line with a _#_ character.<br/>
+The input file must be extended with `.list` and shoud be under `<project-dir>/data/wordlists/`.<br/>
 
 Output
 ======
 <h4>Analysis</h4>
-It show analysis result of each file in a separate file whose filename has been extended by ".analyzed.txt".<br/>
+Analysis result of each source file is printed in a separate file whose filename has been extended by ".analyzed.txt".<br/>
 Analysis result shows -
 
 * Words and word count
@@ -71,6 +70,7 @@ Analysis result shows -
 * Syllable-tails and syllable-tail count
 * Letter-orders and count
 * Total analysis time in milliseconds
+* Hex string of each letter(debugging)
 
 The following is a sample output of analysis.
 
@@ -114,15 +114,15 @@ The following is a sample output of analysis.
 
 <b>Note:</b>
 
-_Syllable_ = a combination of myanmar letters; one or more syllables join to form a myanmar word.
+_Syllable_ = a combination of myanmar letters; one or more syllables join to form a myanmar word
 
-_Syllable-head_ = the first consonant in a syllable.
+_Syllable-head_ = the main or first(in standard storage) consonant or independent vowel in a syllable
 
 _Syllable-tail_ = the remaining part in a syllable except syllable-head
 
 Rules
 =====
-We consider the following words have different types of syllable: ယောက္ခမ, ယောက်ျား, ယောက်ဖ.<br/>
+We consider the following words to have different types of syllable: ယောက္ခမ, ယောက်ျား, ယောက်ဖ.<br/>
 So we count them as different syllables.
 
 	ယောက္	:5
@@ -133,14 +133,12 @@ Purposes
 ========
 This module can be used in <b>NLP (Natural Language Processing)</b> research in the following ways -
 
-* Myanmar Word segmentation (this module can count the number of syllables)
-
-* Myanmar Sorting (part of the module apply "Myanmar Sorting Rules"; still under development)
-
+* Myanmar Word segmentation (this module can identify syllables)
+* Myanmar Sorting (fully functional,with all burmese words; still testing)
 * Analysis of Myanmar letter frequency in a lexicon (still working to support a real lexicon not just a wordlist)
 
 Contact
 =======
-Don't hesitate to contact us if you want to.<br/>
-We appriciate your feedback<br/>
+Don't hesitate if you want to contact us.<br/>
+We appreciate your feedback<br/>
 email:minthanthtoo1994@gmail.com

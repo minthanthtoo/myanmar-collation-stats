@@ -26,7 +26,11 @@ public class Letter
 	/* 
 	 * Myanmar consonants
 	 */
+	public static final char MM_LETTER_KA = '\u1000';
+	public static final char MM_LETTER_NA = '\u1014';
+	public static final char MM_LETTER_RA = '\u101b';
 	public static final char MM_LETTER_A = '\u1021';
+	public static final char MM_LETTER_GREAT_SA = '\u103f';
 
 	/*
 	 * Myanmar independent vowels
@@ -42,22 +46,44 @@ public class Letter
 	/*
 	 * Myanmar dependent vowels
 	 */
+	public static final char MM_VOWEL_SIGN_AA = '\u102c';
 	public static final char MM_VOWEL_SIGN_I = '\u102d';
 	public static final char MM_VOWEL_SIGN_II = '\u102e';
 	public static final char MM_VOWEL_SIGN_U = '\u102f';
 	public static final char MM_VOWEL_SIGN_UU = '\u1030';
 	public static final char MM_VOWEL_SIGN_E = '\u1031';
-	public static final char MM_VOWEL_SIGN_AA = '\u102c';
-	public static final int MM_SIGN_ANUSVARA = '\u1036';
-
-	//TODO: add Myanmar Symbols
-
+	/*
+	 * According to Unicode 5.1, it is assigned as Myanmar Symbol.
+	 * However,it acts as both semi-vowel('v') and semi-final('F') depending 
+	 * on whether its main consonant('C') or independent vowel('v')
+	 * is joined with another vowels('V'),viz. -ိ , -ု.
+	 * Here we assign as a vowel('v') for efficient coding.
+	 */
+	public static final char MM_SIGN_ANUSVARA = '\u1036';
+	
 	public static final char MM_SIGN_ASAT = '\u103a';
+	
+	public static final char MM_CONSONANT_SIGN_MEDIAL_WA = '\u103d';
+	public static final char MM_CONSONANT_SIGN_MEDIAL_HA = '\u103e';
+
+	/*
+	 * Myanmar symbols
+	 */
+	public static final char MM_SYMBOL_LOCATIVE = '\u104c';
+	public static final char MM_SYMBOL_COMPLETED = '\u104d';
+	public static final char MM_SYMBOL_AFORMENTIONED = '\u104e';
+	public static final char MM_SYMBOL_GENITIVE = '\u104f';
 
 	static final int FIRST_KNOWN_LETTER = 0x1000;// \u1000
 	static final int LAST_KNOWN_LETTER = 0x1100;// \u1000
 	static final int[] letterTypes = new int[LAST_KNOWN_LETTER
 	- FIRST_KNOWN_LETTER];
+
+	public static final char MM_LETTER_NGA = '\u100a';
+
+	public static final char MM_SIGN_VISARGA = '\u1038';
+
+	public static final char MM_LETTER_LA = '\u101c';
 
 	static
 	{
@@ -105,6 +131,7 @@ public class Letter
 
 	public static Letter getInstance(CollationStats stats, char c)
 	{
+		stats.letterCount++;
 		for (Letter l : stats.letters)
 			if (l.codePoint == c)// found
 			{
@@ -114,6 +141,28 @@ public class Letter
 
 		// not found
 		Letter l = new Letter(c);
+		stats.letters.add(l);
+		return l;
+	}
+
+	/* 
+	 * This method acts the same as <code>getInstance</code>,
+	 * but it does not increment occurrence of the letter and
+	 * total letter count.
+	 * NOTE: <code>TempLetter</code> differs fron the letter returned
+	 *       by this method in that it permanantly disables statistic functionality
+	 */
+	public static Letter getInstanceOnly(CollationStats stats, char c)
+	{
+		for (Letter l : stats.letters)
+			if (l.codePoint == c)// found
+			{
+				return l;
+			}
+
+		// not found
+		Letter l = new Letter(c);
+		l.occurrence=0;
 		stats.letters.add(l);
 		return l;
 	}
@@ -143,9 +192,19 @@ public class Letter
 	public static String toString(Letter[] arr)
 	{
 		StringBuilder sb = new StringBuilder();
+		int tempIndex = 0;
 		for (Letter s : arr)
 		{
-			sb.append(s.codePoint);
+			if (s instanceof TempLetter)
+			{
+				if (((TempLetter)s).original.hashCode() != tempIndex)
+				{
+					sb.append(((TempLetter)s).original.codePoint);
+					tempIndex = ((TempLetter)s).original.hashCode();
+				}
+			}
+			else
+				sb.append(s.codePoint);
 		}
 		return sb.toString();
 	}

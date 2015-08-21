@@ -3,25 +3,26 @@ package com.minthanthtoo.collationstats;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.*;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class Syllable extends SyllableAbstr
 {
 	public static final int SEGMENTATION_TYPE_ORTHOGRAHICAL=1;
 	public static final int SEGMENTATION_TYPE_PHONOLOGICAL=2;
 	public static int SEGMENTATION_TYPE=SEGMENTATION_TYPE_PHONOLOGICAL;
-	
+
 	LetterOrder order;
-	
+
 	/*
-	* The following arrays buffer the letters into groups
-	* according to letter types,such as consonant('C'), medials('M''),
-	* finals('F'), vowels('V'),tones('T').
-	* Mainly used in <code>LexComparator.SyllableComparator</code>
-	* for efficient look-up of letters and replacing of Myanmar 
-	* 'Independent Vowels' and 'Symbols' with suitable <code>TempLetter</code>
-	* to get the correct order of words.
-	*/
+	 * The following arrays buffer the letters into groups
+	 * according to letter types,such as consonant('C'), medials('M''),
+	 * finals('F'), vowels('V'),tones('T').
+	 * Mainly used in <code>LexComparator.SyllableComparator</code>
+	 * for efficient look-up of letters and replacing of Myanmar 
+	 * 'Independent Vowels' and 'Symbols' with suitable <code>TempLetter</code>
+	 * to get the correct order of words.
+	 */
 	Letter[] consonant;
 	Letter[] medials,finals,vowels,tones;
 	protected  Syllable(CollationStats stats, Letter[] syllable)
@@ -77,6 +78,14 @@ public class Syllable extends SyllableAbstr
 										TempLetter.getInstance(Letter.MM_LETTER_A),
 									};
 								case Letter.MM_LETTER_U:
+									if (arg.vowels.length > 0)
+									{
+										for (Letter v:arg.vowels)
+											if (v.codePoint == Letter.MM_VOWEL_SIGN_U)
+												return new TempLetter[]{
+													TempLetter.getInstance(Letter.MM_LETTER_A),
+												};
+									}
 									l = new Letter[arg.vowels.length + 1];
 									System.arraycopy(arg.vowels, 0
 													 , l, 1, arg.vowels.length);
@@ -127,15 +136,75 @@ public class Syllable extends SyllableAbstr
 							}
 							break;
 						case Letter.LETTER_TYPE_SYMBOL:
+							// We need a consonant but we found symbols
+							// let's substitute them with appropriate letters
 							switch (arg.letters[i].codePoint)
 							{
-									//TODO: add Myanmar symbol letters
+								case Letter.MM_SYMBOL_LOCATIVE:
+									// substitute finals
+									Letter[] l = new Letter[arg.finals.length + 2];
+									System.arraycopy(arg.finals, 0
+													 , l, 2, arg.finals.length);
+									l[0] = TempLetter.getInstance(Letter.MM_LETTER_KA);
+									l[1] = TempLetter.getInstance(Letter.MM_SIGN_ASAT);
+									arg.finals = l;
+									// substitute medials
+									l = new Letter[arg.medials.length + 1];
+									System.arraycopy(arg.medials, 0
+													 , l, 1, arg.medials.length);
+									l[0] = TempLetter.getInstance(Letter.MM_CONSONANT_SIGN_MEDIAL_HA);
+									arg.medials = l;
+									// substitute vowels
+									l = new Letter[arg.vowels.length + 2];
+									System.arraycopy(arg.vowels, 0
+													 , l, 2, arg.vowels.length);
+									l[0] = TempLetter.getInstance(Letter.MM_VOWEL_SIGN_I);
+									l[1] = TempLetter.getInstance(Letter.MM_VOWEL_SIGN_U);
+									arg.vowels = l;
+									// substitute and return the main consonant
+									return new TempLetter[]{
+										TempLetter.getInstance(Letter.MM_LETTER_NA),
+									};
+								case Letter.MM_SYMBOL_COMPLETED:
+									// substitute medials
+									l = new Letter[arg.medials.length + 1];
+									System.arraycopy(arg.medials, 0
+													 , l, 1, arg.medials.length);
+									l[0] = TempLetter.getInstance(Letter.MM_CONSONANT_SIGN_MEDIAL_WA);
+									arg.medials = l;
+									// substitute vowels
+									l = new Letter[arg.vowels.length + 1];
+									System.arraycopy(arg.vowels, 0
+													 , l, 1, arg.vowels.length);
+									l[0] = TempLetter.getInstance(Letter.MM_VOWEL_SIGN_E);
+									arg.vowels = l;
+									// substitute and return the main consonant
+									return new TempLetter[]{
+										TempLetter.getInstance(Letter.MM_LETTER_RA),
+									};
+								case Letter.MM_SYMBOL_GENITIVE:
+									// substitute vowels
+									l = new Letter[arg.vowels.length + 1];
+									System.arraycopy(arg.vowels, 0
+													 , l, 1, arg.vowels.length);
+									l[0] = TempLetter.getInstance(Letter.MM_VOWEL_SIGN_I);
+									arg.vowels = l;
+									// substitute and return the main consonant
+									return new TempLetter[]{
+										TempLetter.getInstance(Letter.MM_LETTER_A),
+									};
+								default:
+									// other symbols need multi-syllable substitution,and
+									// that has to be done before syllable formation
+									// for more details,see getSyllables() methods in this class
+									break;
 							}
 							break;
 						case Letter.LETTER_TYPE_CONSONANT:
 							startIndex = i;
 							endIndex = i + 1;
-							// NOTE: we need to break for-loop
+							// NOTE: We need to break for-loop because
+							//       we have found the consonant
 							i = Character.MAX_VALUE;
 							break;
 						default:
@@ -161,8 +230,10 @@ public class Syllable extends SyllableAbstr
 						arg.finals = new TempLetter[]{
 							TempLetter.getInstance('\u1019'),
 							TempLetter.getInstance('\u103a'),
-						};// -ံ == မ်
-						newArr.remove(arg.letters[charIndex]);
+						};// -ံ (semi-vowel) => -မ် (Finals)
+						// NOTE: Don't remove -ံ (a fix for sorting -ံ after -မ်)
+						// <code>LexComparator.compareVowels()</code> uses it as a flag
+//						newArr.remove(arg.letters[charIndex]);
 					}
 				}
 				return newArr.toArray(new Letter[0]);
@@ -248,9 +319,15 @@ public class Syllable extends SyllableAbstr
 
 	public static Syllable getInstance(CollationStats stats, Letter[] l)
 	{
+		stats.syllableCount++;
 		for (Syllable s : stats.syllables)
 			if (Arrays.equals(l, s.letters))// found
 			{
+				// update statistics
+				for (Letter let:s.letters)
+				{
+					Letter.getInstance(stats, let.codePoint);
+				}
 				s.occurrence++;
 				return s;
 			}
@@ -362,6 +439,7 @@ public class Syllable extends SyllableAbstr
 		// exclude 1st index,i.e. '0'
 		Set<Integer> segmentIndices=new TreeSet<Integer>();
 		int charIndex=-1;
+		char c;
 
 		// each couple of bits in the byte represent a 'C' or 'F';
 		// '01' means 'C' and '10' means 'F'
@@ -380,14 +458,32 @@ public class Syllable extends SyllableAbstr
 
 		for (int i = 0; i < word.length(); i++)
 		{
-			char c = word.charAt(i);
+			c = word.charAt(i);
 			int type = Letter.getLetterType(c);
 			switch (type)
 			{
+				case Letter.LETTER_TYPE_SYMBOL:
+					switch (c)
+					{
+						case Letter.MM_LETTER_GREAT_SA:
+							// this symbol will be substitued by a syllable-tail,i.e.
+							// (will follow preceeding letter(C or V) as a final)
+							// and a new syllable(main consonant will be added to next syllable)
+							continue;
+						case Letter.MM_SYMBOL_AFORMENTIONED:
+							// this symbol can be substitued by 2 separate syllables
+							// if it preceeds the final and the tone (င္﻿း)
+							if (word.charAt(i + 1) == Letter.MM_LETTER_NGA &&
+								word.charAt(i + 2) == Letter.MM_SIGN_ASAT &&
+								word.charAt(i + 3) == Letter.MM_SIGN_VISARGA)
+							{
+								i += 4;
+							}
+							// and allows fall through;the rest part is the same
+					}
 				case Letter.LETTER_TYPE_CONSONANT:
 				case Letter.LETTER_TYPE_VOWEL_INDEPENDANT:
 				case Letter.LETTER_TYPE_UNKNOWN:
-				case Letter.LETTER_TYPE_SYMBOL:
 					for (int j=0;j < 3;j++)
 					{
 						cOrF_indices[j] = cOrF_indices[j + 1];
@@ -398,7 +494,7 @@ public class Syllable extends SyllableAbstr
 					break;
 				case Letter.LETTER_TYPE_FINAL:
 					if (charIndex == i - 1)
-						continue;// this letter does not acts as asat char after these letters
+						continue;// this letter,following -ါ or -ာ acts as a vowel(v) but not as final(F)
 					for (int j=0;j < 3;j++)
 					{
 						cOrF_indices[j] = cOrF_indices[j + 1];
@@ -437,12 +533,14 @@ public class Syllable extends SyllableAbstr
 					}
 					break;
 				default:
-//				if(cOrF<0){
-//					System.out.println(cOrF);
-//					System.out.println(word+":"+i+":"+ Integer.toBinaryString(cOrF));
-//				}
+					//NOTE: The out-commented code below prints out negative
+					//      values of "cOrF",which can be used in this switch-case
+//:				if(cOrF<0){
+//:					System.out.println(cOrF);
+//:					System.out.println(word+":"+i+":"+ Integer.toBinaryString(cOrF));
+//:				}
 			}
-//			System.out.println(word+":"+i+":"+ Integer.toBinaryString(cOrF));
+//:			System.out.println(word+":"+i+":"+ Integer.toBinaryString(cOrF));
 		}
 
 		switch (cOrF)
@@ -506,23 +604,88 @@ public class Syllable extends SyllableAbstr
 
 		// don't forget to include the last syllable
 		segmentIndices.add(word.length());
+
 		// syllable start index;
 		// end index is retrieved from segmentIndices List progressively
 		// start index also steps forward accordingly
 		int syllableStart = 0;
+
 		for (int i:segmentIndices)
 		{
+//			int counter=0;
 			// chars to Letters
-			Letter[] l = new Letter[i - syllableStart];
-			for (int j = 0; j < l.length; j++)
+			Letter[] l = new Letter[(i - syllableStart)];
+			int length=l.length;
+			for (int j = 0; j < length; j++)
 			{
-				l[j] = Letter.getInstance(stats, word.charAt(syllableStart + j));
+				c = word.charAt(syllableStart + j);
+				switch (c)
+				{
+						// Myanmar symbols
+					case Letter.MM_LETTER_GREAT_SA:
+						// hold the two syllables
+						Letter[] newArr = new Letter[(i - syllableStart) + 2];
+						System.arraycopy(l, 0, newArr, 0, j);
+//:						System.out.println(Arrays.toString(l));
+						l = newArr;
+						length = l.length;
+						// for statistics of original letter
+						Letter src = Letter.getInstanceOnly(stats, c);
+						newArr[j] = TempLetter.getInstance(src, '\u101e');// သ
+						newArr[++j] = TempLetter.getInstance(src, '\u103a');// -်
+						newArr[++j] = TempLetter.getInstance(src, '\u1039');// -္
+						//++j;
+						// commit first syllable
+						SyllableHead.getInstance(stats, newArr[0]);// counting will do in the method
+						list.add(Syllable.getInstance(stats, Arrays.copyOf(newArr, j)));
+						// begin next syllable,inserting the main consonant
+						syllableStart += (j - 2);
+						// hold the second syllable
+						l = new Letter[i - syllableStart];// Arrays.copyOfRange(newArr, j, newArr.length);
+						j = 0;
+						l[0] = TempLetter.getInstance(src, '\u101e');// သ
+						length = l.length;
+//						counter += 3;
+						continue;
+					case Letter.MM_SYMBOL_AFORMENTIONED:
+						// create the object of original letter, without being counted
+						src = Letter.getInstanceOnly(stats, c);
+
+						newArr = new Letter[4];
+//:						System.out.println(Arrays.toString(l));
+						// first syllable
+						newArr[j] = TempLetter.getInstance(src, Letter.MM_LETTER_LA);// လ
+						newArr[++j] = TempLetter.getInstance(src, Letter.MM_LETTER_NGA);// ည
+						newArr[++j] = TempLetter.getInstance(src, Letter.MM_SIGN_ASAT);// -်
+						newArr[++j] = TempLetter.getInstance(src, Letter.MM_SIGN_VISARGA);// -း
+						// commit first syllable
+						SyllableHead.getInstance(stats, src);// counting will do in the method
+						list.add(Syllable.getInstance(stats, newArr));
+
+						// second syllable
+						newArr = new Letter[6];
+						newArr[j = 0] = TempLetter.getInstance(src, Letter.MM_LETTER_KA);// က
+						newArr[++j] = TempLetter.getInstance(src, Letter.MM_VOWEL_SIGN_E);//﻿ေ-
+						newArr[++j] = TempLetter.getInstance(src, Letter.MM_VOWEL_SIGN_AA);// -ာ
+						newArr[++j] = TempLetter.getInstance(src, Letter.MM_LETTER_NGA);// င
+						newArr[++j] = TempLetter.getInstance(src, Letter.MM_SIGN_ASAT);// -်
+						newArr[++j] = TempLetter.getInstance(src, Letter.MM_SIGN_VISARGA);// -း
+						// commit second syllable
+						list.add(Syllable.getInstance(stats, newArr));
+						j = length = 0;// force the formation of next syllable
+						continue;
+					default:// letters except the above Myanmar Symbols
+						l[j] = Letter.getInstance(stats, c);
+				}
 			}
+//:			if (counter > 0)
+//:				System.out.println(Arrays.toString(l));
+
 			// syllable head and tail
-			if (l.length > 0)
+			if (length > 0)
 			{
 				SyllableHead.getInstance(stats, l[0]);
-				if (l.length > 1)
+				if (l.length > 1)// && counter == 0)
 					SyllableTail.getInstance(stats, Arrays.copyOfRange(l, 1, l.length));
 				list.add(Syllable.getInstance(stats, l));
 			}
@@ -706,6 +869,16 @@ public class Syllable extends SyllableAbstr
 		for (Syllable s : arr)
 		{
 			sb.append(Letter.toString(s.letters));
+		}
+		return sb.toString();
+	}
+
+	public static String getMessage(Syllable[] arr)
+	{
+		StringBuilder sb = new StringBuilder();
+		for (Syllable s : arr)
+		{
+			sb.append(Letter.toString(s.letters) + "_{" + Letter.toHexString(s.letters) + "}");
 		}
 		return sb.toString();
 	}

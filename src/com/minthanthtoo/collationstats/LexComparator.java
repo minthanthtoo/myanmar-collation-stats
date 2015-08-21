@@ -576,7 +576,7 @@ public class LexComparator
 			if (l0 == 2)// both lengths == 2
 				if (arg0[start0].codePoint == arg1[start1].codePoint && arg0[start0 + 1].codePoint == arg1[start1 + 1].codePoint)
 					return 0;// both same
-				else if (arg1[start1].codePoint == '\u102d' && arg1[start1 + 1].codePoint == '\u102f')
+				else if (arg0[start1].codePoint == Letter.MM_VOWEL_SIGN_E && arg0[start1 + 1].codePoint == Letter.MM_VOWEL_SIGN_AA)
 					return -1;//1st is earlier
 				else
 					return 1;//1st is later
@@ -589,10 +589,10 @@ public class LexComparator
 			{
 				if (arg0[start0].codePoint == '\u1036')
 				{
-					if (arg1[start1].codePoint == '\u102d' && arg1[start1 + 1].codePoint == '\u102f')
-						return -1;//1st is earlier
+					if (arg1[start1].codePoint == Letter.MM_VOWEL_SIGN_E && arg1[start1 + 1].codePoint == Letter.MM_VOWEL_SIGN_AA)
+						return 1;//1st is earlier
 					else
-						return 1;//1st is later
+						return -1;//1st is later
 				}
 				// Comparison between "-ု" and "-ံု"
 				// NOTE: Syllables containing the letters "-ံု" are the results of
@@ -613,7 +613,8 @@ public class LexComparator
 			}
 			else
 			{//if(l1==3){
-				return 1;// 1st is later
+				//TODO: add more conditions
+				return -1;// 1st is later
 			}
 		}
 		else if (l0 == 2)
@@ -622,10 +623,10 @@ public class LexComparator
 			{
 				if (arg1[start1].codePoint == '\u1036')
 				{
-					if (arg0[start0].codePoint == '\u102d' && arg0[start0 + 1].codePoint == '\u102f')
-						return 1;//2nd is earlier
+					if (arg0[start0].codePoint == Letter.MM_VOWEL_SIGN_E && arg0[start0 + 1].codePoint == Letter.MM_VOWEL_SIGN_AA)
+						return -1;//2nd is earlier
 					else
-						return -1;//2nd is later
+						return 1;//2nd is later
 				}
 				// Comparison between "-ု" and "-ံု"
 				else if (arg1[start1].codePoint == Letter.MM_VOWEL_SIGN_U &&
@@ -639,7 +640,10 @@ public class LexComparator
 			}
 			else
 			{//if(l1==3){
-				return 1;// 1st is later
+				if (arg0[start1].codePoint == Letter.MM_VOWEL_SIGN_E && arg0[start1 + 1].codePoint == Letter.MM_VOWEL_SIGN_AA)
+					return -1;//1st is earlier
+				else
+					return 1;// 1st is later
 			}
 		}
 		else
@@ -657,10 +661,10 @@ public class LexComparator
 			}
 			else
 			{//if(l1==2){
-				if (arg1[start1].codePoint == '\u102d' && arg1[start1 + 1].codePoint == '\u102f')
-					return -1;//1st is earlier
+				if (arg1[start1].codePoint == Letter.MM_VOWEL_SIGN_E && arg1[start1 + 1].codePoint == Letter.MM_VOWEL_SIGN_AA)
+					return 1;//1st is earlier
 				else
-					return 1;// 1st is later
+					return -1;// 1st is later
 			}
 		}
 	}

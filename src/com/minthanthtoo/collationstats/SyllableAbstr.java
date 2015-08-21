@@ -8,12 +8,7 @@ public abstract class SyllableAbstr
 	@Override
 	public String toString()
 	{
-		StringBuilder sb = new StringBuilder();
-		for (Letter l : this.letters)
-		{
-			sb.append(l.codePoint);
-		}
-		return sb.toString();
+		return Letter.toString(letters);
 	}
 	
 	public String getMessage()

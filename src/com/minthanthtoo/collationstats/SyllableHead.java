@@ -15,6 +15,7 @@ public class SyllableHead extends SyllableAbstr
 
 	public static SyllableHead getInstance(CollationStats stats, Letter l)
 	{
+		stats.syllableHeadCount++;
 		for (SyllableHead s : stats.syllableHeads)
 			if (l == s.letters[0])// found
 			{

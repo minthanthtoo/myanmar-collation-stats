@@ -13,14 +13,20 @@ public class Word
 
 	public static Word getInstance(CollationStats stats, String word)
 	{
+		stats.wordCount++;
 		Word w = stats.words.get(word);
 		if (w == null)
 		{
 			w = new Word(stats, word);
 			stats.words.put(word, w);
-		} else
+		}
+		else
 		{
-			w.syllables = Syllable.getSyllables(stats, word);
+			// update statistics
+			for (Syllable s:w.syllables)
+			{
+				Syllable.getInstance(stats, s.letters);
+			}
 			w.occurrence++;
 		}
 		return w;
@@ -34,6 +40,11 @@ public class Word
 
 	public String getMessage()
 	{
-		return Syllable.toString(this.syllables) + "\t:" + occurrence;
+		StringBuilder sb = new StringBuilder();
+		for (Syllable s : syllables)
+		{
+			sb.append("{" + Letter.toHexString(s.letters) + "}_");
+		}
+		return Syllable.toString(this.syllables) + "\t:" + occurrence + "\t:" + sb.toString();
 	}
 }
