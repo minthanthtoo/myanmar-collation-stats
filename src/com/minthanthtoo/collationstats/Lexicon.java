@@ -1,5 +1,8 @@
 package com.minthanthtoo.collationstats;
 
+import java.util.*;
+import java.io.*;
+
 public class Lexicon
 {
 	CollationStats stats;

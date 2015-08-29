@@ -1,5 +1,8 @@
 package com.minthanthtoo.collationstats;
 
+import java.io.*;
+import java.util.*;
+
 public class Letter
 {
 	public static final int LETTER_TYPE_UNKNOWN = 'x';
@@ -74,10 +77,10 @@ public class Letter
 	public static final char MM_SYMBOL_AFORMENTIONED = '\u104e';
 	public static final char MM_SYMBOL_GENITIVE = '\u104f';
 
-	static final int FIRST_KNOWN_LETTER = 0x1000;// \u1000
-	static final int LAST_KNOWN_LETTER = 0x1100;// \u1000
-	static final int[] letterTypes = new int[LAST_KNOWN_LETTER
-	- FIRST_KNOWN_LETTER];
+	static final int FIRST_MYANMAR_LETTER = 0x1000;// \u1000
+	static final int LAST_MYANMAR_LETTER = 0x1100;// \u1000
+	static final int[] letterTypes = new int[LAST_MYANMAR_LETTER
+	- FIRST_MYANMAR_LETTER];
 
 	public static final char MM_LETTER_NGA = '\u100a';
 
@@ -169,12 +172,136 @@ public class Letter
 
 	public static int getLetterType(char c)
 	{
-		if (c >= FIRST_KNOWN_LETTER && c <= LAST_KNOWN_LETTER)
-			return letterTypes[c - FIRST_KNOWN_LETTER];
+		if (c >= FIRST_MYANMAR_LETTER && c <= LAST_MYANMAR_LETTER)
+			return letterTypes[c - FIRST_MYANMAR_LETTER];
 		else if (c == UNI_CODEPOINT_ZWSP)
 			return LETTER_TYPE_ZWSP;
 		else
 			return LETTER_TYPE_UNKNOWN;
+	}
+
+	public static List<Letter> getLettersOfCodePointsBefore(Lexicon lex, int codepoint)
+	{
+		List<Letter> list=new LinkedList<Letter>();
+		for (Letter l:lex.stats.letters)
+		{
+			if (l.codePoint < codepoint)
+				list.add(l);
+		}
+		return list;
+	}
+
+	public static Collection<Letter> getLettersOfCodePointsBefore(String[] src, int codepoint)
+	{
+		Set<Letter> list=new TreeSet<Letter>(new LexComparator.LetterComparator());
+		CollationStats stats=new CollationStats();
+		for (String s:src)
+		{
+			for (char c:s.toCharArray())
+				if (c < codepoint)
+					list.add(Letter.getInstance(stats, c));
+		}
+		return list;
+	}
+
+	public static Collection<Letter> getLettersOfCodePointsBefore(InputStream src, int codepoint)
+	{
+		CollationStats stats=new CollationStats();
+		Set<Letter> list=new TreeSet<Letter>(new LexComparator.LetterComparator());
+		BufferedReader r=new BufferedReader(new InputStreamReader(src));
+		String s=null;
+		try
+		{
+			// NOTE: Currently it accept only simple wordlist
+			while ((s = r.readLine()) != null)
+			{
+				for (char c:s.toCharArray())
+				{
+					if (c < codepoint)
+						list.add(Letter.getInstance(stats, c));
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return list;
+	}
+
+	public static Collection<Letter> getLettersOfCodePoint(InputStream src, int codepoint)
+	{
+		CollationStats stats=new CollationStats();
+		Set<Letter> list=new TreeSet<Letter>(new LexComparator.LetterComparator());
+		BufferedReader r=new BufferedReader(new InputStreamReader(src));
+		String s=null;
+		try
+		{
+			// NOTE: Currently it accept only simple wordlist
+			while ((s = r.readLine()) != null)
+			{
+				for (char c:s.toCharArray())
+				{
+					if (c == codepoint)
+						list.add(Letter.getInstance(stats, c));
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return list;
+	}
+
+	public static Collection<Letter> getLettersOfCodePointsAfter(InputStream src, int codepoint)
+	{
+		CollationStats stats=new CollationStats();
+		Set<Letter> list=new TreeSet<Letter>(new LexComparator.LetterComparator());
+		BufferedReader r=new BufferedReader(new InputStreamReader(src));
+		String s=null;
+		try
+		{
+			// NOTE: Currently it accept only simple wordlist
+			while ((s = r.readLine()) != null)
+			{
+				for (char c:s.toCharArray())
+				{
+					if (c > codepoint)
+						list.add(Letter.getInstance(stats, c));
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return list;
+	}
+
+	public static Collection<Letter> getLettersOfCodePointsBetween(InputStream src, int lower, int upper)
+	{
+		CollationStats stats=new CollationStats();
+		Set<Letter> list=new TreeSet<Letter>(new LexComparator.LetterComparator());
+		BufferedReader r=new BufferedReader(new InputStreamReader(src));
+		String s=null;
+		try
+		{
+			// NOTE: Currently it accept only simple wordlist
+			while ((s = r.readLine()) != null)
+			{
+				for (char c:s.toCharArray())
+				{
+					if (c > lower && c < upper)
+						list.add(Letter.getInstance(stats, c));
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return list;
 	}
 
 	@Override

@@ -25,7 +25,7 @@ public class Word
 			// update statistics
 			for (Syllable s:w.syllables)
 			{
-				Syllable.getInstance(stats, s.letters);
+				s.getInstance(stats, s.letters);
 			}
 			w.occurrence++;
 		}

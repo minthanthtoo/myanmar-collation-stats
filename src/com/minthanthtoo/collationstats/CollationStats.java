@@ -1,11 +1,11 @@
 package com.minthanthtoo.collationstats;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.*;
 
 public class CollationStats
 {
@@ -26,6 +26,11 @@ public class CollationStats
 	 * while you may not want to analyze the data
 	 */
 	public int wordCount, syllableCount, syllableHeadCount, syllableTailCount, letterCount, letterOrderCount;
+
+	public CollationStats()
+	{
+		wordCount = 0;syllableCount = 0;letterCount = 0;letterOrderCount = 0;
+	}
 
 	private CollationStats(Lexicon src)
 	{

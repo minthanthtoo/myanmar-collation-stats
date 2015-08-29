@@ -1,23 +1,15 @@
 package com.minthanthtoo.collationstats;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.lang.reflect.Field;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.io.*;
+import java.lang.reflect.*;
+import java.nio.charset.*;
+import java.util.*;
 
 public class Utils
 {
 	public static final String newLineChar="\r\n";
 	public static final char segmentChar='|';
+	public static final int bufferLength=1024;
 
 	public static File[] getDataFiles()
 	{
@@ -124,7 +116,7 @@ public class Utils
 			}
 		}
 
-		writeToFile(filenameTo, sb.toString());
+		toFile(sb.toString(), filenameTo);
 
 		return toF;
 	}
@@ -158,8 +150,28 @@ public class Utils
 		System.out.println("--- Finish file-read from : '" + srcFile.getName() + "' ---");
 		return new Lexicon(words.toArray(new String[0]));
 	}
+	
+	public static void toFile(InputStream s, String filepath)
+	{
+		try
+		{
+			OutputStream os = new FileOutputStream(filepath);
+			System.out.println("--- Writing to file : '" + filepath.substring(filepath.lastIndexOf(File.separatorChar)) + "' ---");
+			byte[] buffer=new byte[bufferLength];
+			int read=0;
+			while((read=s.read(buffer))>-1){
+				os.write(buffer,0,read);
+			}
+			os.close();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		System.out.println("--- Finish file-write to : '" + filepath.substring(filepath.lastIndexOf(File.separatorChar)) + "' ---");
+	}
 
-	public static void writeToFile(String filepath, String s)
+	public static void toFile(String s, String filepath)
 	{
 		try
 		{

@@ -6,9 +6,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.io.*;
 
 public class Test
 {
@@ -23,10 +22,11 @@ public class Test
 		{
 			Utils.fixIOEncodingToUtf8();
 			Test t=new Test();
-			t.testLetterTypesTable();
-			t.testPrintOutStats();
-			t.testSyllableSegmentation();
-			t.testMyanmarSorting();
+//			t.testLetterTypesTable();
+//			t.testPrintOutStats();
+//			t.testSyllableSegmentation();
+//			t.testMyanmarSorting();
+			t.testNonMyanmarLetters();
 		}
 		catch (Exception ex)
 		{
@@ -78,6 +78,29 @@ public class Test
 		for (File f:Utils.getDataFiles())
 		{
 			Utils.toFile(Utils.toLexicon(f), f.getAbsolutePath() + ".sorted.txt", Utils.LEX_TO_FILE_FLAG_SORT);
+		}
+	}
+
+//	@org.junit.Test
+	public void testNonMyanmarLetters()
+	{
+		for (File f:Utils.getDataFiles())
+		{
+			try
+			{
+				Collection<Letter> list=Letter.getLettersOfCodePointsBefore(new FileInputStream(f), Letter.FIRST_MYANMAR_LETTER);
+				list.addAll(Letter.getLettersOfCodePointsAfter(new FileInputStream(f), Letter.LAST_MYANMAR_LETTER));
+				OutputStreamWriter w=new OutputStreamWriter(new FileOutputStream(f.getAbsoluteFile() + ".nonMyanmarLetters.txt"));
+				for (Letter l:list)
+				{
+					w.write(l.getMessage() + Utils.newLineChar);
+				}
+				w.close();
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -147,7 +170,7 @@ public class Test
 
 		sb.append(src.stats);
 		sb.append(time);
-		Utils.writeToFile(srcFile.getAbsolutePath() + ".analyzed.txt", sb.toString());
+		Utils.toFile(sb.toString(), srcFile.getAbsolutePath() + ".analyzed.txt");
 
 		sb = new StringBuilder();
 
@@ -157,7 +180,7 @@ public class Test
 			sb.append(Syllable.toString(w.syllables) + Utils.newLineChar);
 		//sb.append("count:\t" +src.stats.words.values().size() + "\n");
 		//sb.append(time);
-		Utils.writeToFile(srcFile.getAbsolutePath() + ".Words.txt", sb.toString());
+		Utils.toFile(sb.toString(), srcFile.getAbsolutePath() + ".Words.txt");
 
 		sb = new StringBuilder();
 		Collections.sort(src.stats.syllables, new LexComparator.SyllableComparator());
@@ -166,7 +189,7 @@ public class Test
 			sb.append(s.getMessage() + Utils.newLineChar);
 		//sb.append("count:\t" + src.stats.syllables.size() + "\n");
 		//sb.append(time);
-		Utils.writeToFile(srcFile.getAbsolutePath() + ".Syllables.txt", sb.toString());
+		Utils.toFile(sb.toString(), srcFile.getAbsolutePath() + ".Syllables.txt");
 
 		sb = new StringBuilder();
 		Collections.sort(src.stats.letters, new LexComparator.LetterComparator());
@@ -175,7 +198,7 @@ public class Test
 			sb.append(l.codePoint + Utils.newLineChar);
 		//sb.append("count:\t" + src.stats.letters.size() + "\n");
 		//sb.append(time);
-		Utils.writeToFile(srcFile.getAbsolutePath() + ".Letters.txt", sb.toString());
+		Utils.toFile(sb.toString(), srcFile.getAbsolutePath() + ".Letters.txt");
 
 		sb = new StringBuilder();
 		Collections.sort(src.stats.syllableHeads, new LexComparator.SyllableAbstrComparator());
@@ -184,7 +207,7 @@ public class Test
 			sb.append(s.getMessage() + Utils.newLineChar);
 		//sb.append("count:\t" + src.stats.syllableHeads.size() + "\n");
 		//sb.append(time);
-		Utils.writeToFile(srcFile.getAbsolutePath() + ".SyllablesHeads.txt", sb.toString());
+		Utils.toFile(sb.toString(), srcFile.getAbsolutePath() + ".SyllablesHeads.txt");
 
 		sb = new StringBuilder();
 		Collections.sort(src.stats.syllableTails, new LexComparator.SyllableAbstrComparator());
@@ -193,6 +216,6 @@ public class Test
 			sb.append(s.toString() + Utils.newLineChar);
 		//sb.append("count:\t" + src.stats.syllableTails.size() + "\n");
 		//sb.append(time);
-		Utils.writeToFile(srcFile.getAbsolutePath() + ".SyllablesTails.txt", sb.toString());
+		Utils.toFile(sb.toString(), srcFile.getAbsolutePath() + ".SyllablesTails.txt");
 	}
 }
